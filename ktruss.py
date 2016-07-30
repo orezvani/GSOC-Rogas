@@ -33,6 +33,7 @@ class Vertex:
 class Graph:
     def __init__(self):
         self.vert_dict = {}
+        self.vert_num = {}
         self.num_vertices = 0
 
 
@@ -54,6 +55,7 @@ class Graph:
         self.num_vertices = self.num_vertices + 1
         new_vertex = Vertex(node)
         self.vert_dict[node] = new_vertex
+        self.vert_num[node] = self.num_vertices - 1
         return new_vertex
 
 
@@ -104,7 +106,7 @@ class Graph:
 
 
     def update_weight(self, node1, node2, new_weight):
-        if g.is_connected(node1, node2):
+        if self.is_connected(node1, node2):
             self.vert_dict[node1].adjacent[self.vert_dict[node2]] = new_weight
             return self.vert_dict[node1].adjacent.get(self.vert_dict[node2])
         else:
@@ -120,10 +122,20 @@ class Graph:
         # Here we detect the k-truss
 
         # Let's count the number of triangles
+        marked = [0] * self.num_vertices
         for v in self:
             for w in v.get_connections():
-                vid = v.get_id()
-                wid = w.get_id()
+                marked[self.vert_num[w.get_id()]] = 1
+            for w in v.get_connections():
+                if self.vert_num[v.get_id()] < self.vert_num[w.get_id()]:
+                    kk = 0
+                    for y in w.get_connections():
+                        if marked[self.vert_num[y.get_id()]] > 0:
+                            kk += 1
+                    self.update_weight(v.get_id(), w.get_id(), kk)
+                    self.update_weight(w.get_id(), v.get_id(), kk)
+            for w in v.get_connections():
+                marked[self.vert_num[w.get_id()]] = 0
 
 
 
@@ -147,13 +159,9 @@ g.add_edge('c', 'f', 2)
 g.add_edge('d', 'e', 6)
 g.add_edge('e', 'f', 9)
 
+g.detect_ktruss(1)
+
 g.print_graph()
-print g.get_weight('a', 'b')
-g.update_weight('a', 'b', 8)
-print g.get_weight('a', 'b')
-g.update_weight('a', 'b', 9)
-print g.get_weight('a', 'b')
-g.update_weight('a', 'g', 9)
-print g.get_weight('a', 'g')
+g.print_edges()
 
 
