@@ -118,9 +118,7 @@ class Graph:
         return self.vert_dict.keys()
 
 
-    def detect_ktruss(self, k):
-        # Here we detect the k-truss
-
+    def count_triangles(self):
         # Let's count the number of triangles
         marked = [0] * self.num_vertices
         for v in self:
@@ -138,30 +136,93 @@ class Graph:
                 marked[self.vert_num[w.get_id()]] = 0
 
 
+    def detect_ktruss(self, k):
+        # Let's detect the k-truss
+
+        # First count the number of triangles
+        self.count_triangles()
+
+        # Find some edges to be removed
+        to_be_removed = []
+        for v in self:
+            for w in v.get_connections():
+                if self.get_weight(v.get_id(), w.get_id()) < k and self.vert_num[v.get_id()] < self.vert_num[w.get_id()]:
+                    to_be_removed.append((v.get_id(), w.get_id()))
+
+        # Iteratively removed edges with support no less than k
+        marked = [0] * self.num_vertices
+        to_be_decreased = []
+        while len(to_be_removed) > 0:
+            a, b = to_be_removed.pop()
+            self.update_weight(a, b, -1)
+            self.update_weight(b, a, -1)
+            # mark neighbours of vertex a
+            for w in self.vert_dict[a].get_connections():
+                if self.get_weight(a, w.get_id()) != -1:
+                    marked[self.vert_num[w.get_id()]] = 1
+            # get common neighbours of a and b
+            for w in self.vert_dict[b].get_connections():
+                if marked[self.vert_num[w.get_id()]] > 0 and self.get_weight(b, w.get_id()) != -1:
+                    to_be_decreased.append(w.get_id())
+            # decrease the support of triangles that were formed by (a,b) using common neighbours of a and b
+            for w in to_be_decreased:
+                self.update_weight(a, w, self.get_weight(a, w)-1)
+                self.update_weight(w, a, self.get_weight(w, a)-1)
+                if self.get_weight(a, w) < k and self.get_weight(a, w) > -1:
+                    to_be_removed.append((min(a, w), max(a, w)))
+                self.update_weight(w, b, self.get_weight(w, b)-1)
+                self.update_weight(b, w, self.get_weight(b, w)-1)
+                if self.get_weight(b, w) < k and self.get_weight(b, w) > -1:
+                    to_be_removed.append((min(b, w), max(b, w)))
+            # unmark all neighbours of a for consistency
+            for w in self.vert_dict[a].get_connections():
+                marked[self.vert_num[w.get_id()]] = 0
+            to_be_decreased = []
+            
+
+
+
+
 
 
 
 g = Graph()
-g.add_vertex('a')
-g.add_vertex('b')
-g.add_vertex('c')
-g.add_vertex('d')
-g.add_vertex('e')
-g.add_vertex('f')
-
-g.add_edge('a', 'b', 7)  
-g.add_edge('a', 'c', 9)
-g.add_edge('a', 'f', 14)
-g.add_edge('b', 'c', 10)
-g.add_edge('b', 'd', 15)
-g.add_edge('c', 'd', 11)
-g.add_edge('c', 'f', 2)
-g.add_edge('d', 'e', 6)
-g.add_edge('e', 'f', 9)
-
-g.detect_ktruss(1)
-
-g.print_graph()
-g.print_edges()
-
-
+g.read_graph("edges.txt")
+g.detect_ktruss(2)
+#g.add_vertex('a')
+#g.add_vertex('b')
+#g.add_vertex('c')
+#g.add_vertex('d')
+#g.add_vertex('e')
+#g.add_vertex('f')
+#
+#g.add_vertex('g')
+#g.add_vertex('h')
+#g.add_vertex('i')
+#g.add_vertex('j')
+#
+#g.add_edge('a', 'b', 7)  
+#g.add_edge('a', 'c', 9)
+#g.add_edge('a', 'f', 14)
+#g.add_edge('b', 'c', 10)
+#g.add_edge('b', 'd', 15)
+#g.add_edge('c', 'd', 11)
+#g.add_edge('c', 'f', 2)
+#g.add_edge('d', 'e', 6)
+#g.add_edge('e', 'f', 9)
+#g.add_edge('e', 'g', 9)
+#g.add_edge('g', 'h', 9)
+#g.add_edge('g', 'i', 9)
+#g.add_edge('g', 'j', 9)
+#g.add_edge('h', 'i', 9)
+#g.add_edge('h', 'j', 9)
+#g.add_edge('i', 'j', 9)
+#
+#g.count_triangles()
+#g.print_edges()
+#g.detect_ktruss(2)
+#
+#g.print_graph()
+#g.print_edges()
+#
+#
