@@ -88,6 +88,8 @@ class Graph:
         inList = [0]*len(self.edges)
         components = [[]]
         for i in range(0, len(self.edges)):
+            if inList[i]:
+                continue
             components.append([])
             components[len(components) - 1].append(i)
             inList[i] = 1
@@ -109,6 +111,8 @@ class Graph:
         connected_component_of_v = [-1]*len(self.edges)
         c = -1
         for i in range(0, len(self.edges)):
+            if inList[i]:
+                continue
             c += 1
             connected_component_of_v[i] = c;
             component = [i]

@@ -242,9 +242,73 @@ class Graph:
                     self.remove_edge(v.get_id(), w.get_id())
  
 
-    def search_ktruss(self, query):
-        # Let's decompose the graph into k-truss
-        # This is finding k-truss for different values of k until there is not a connected component that contains all query vertices
+    def detect_connected_components(self):
+        # Find the connected components of the graph
+        inList = [0] * self.num_vertices
+        components = [[]]
+        for v in self:
+            if inList[self.vert_num[v.get_id()]] == 1:
+                continue
+            components.append([])
+            components[len(components) - 1].append(v.get_id())
+            inList[self.vert_num[v.get_id()]] = 1
+            qq = 0
+            while qq < len(components[len(components) - 1]):
+                vv = components[len(components) - 1][qq]
+                for u in self.vert_dict[vv].get_connections():
+                    if inList[self.vert_num[u.get_id()]] == 0:
+                        components[len(components) - 1].append(u.get_id())
+                        inList[self.vert_num[u.get_id()]] = 1
+                qq += 1
+        return components
+
+
+    # Finds connected components of the graph and returns the list of ID of connected component of each vertex
+    def detect_connected_components_inversely(self):
+        # Find the connected components of the resulting graph
+        inList = [0] * self.num_vertices
+        connected_component_of_v = [-1] * self.num_vertices
+        c = -1
+        for v in self:
+            if inList[self.vert_num[v.get_id()]] == 1:
+                continue
+            c += 1
+            connected_component_of_v[self.vert_num[v.get_id()]] = c;
+            component = [v.get_id()]
+            inList[self.vert_num[v.get_id()]] = 1
+            qq = 0
+            while qq < len(component):
+                vv = component[qq]
+                for u in self.vert_dict[vv].get_connections():
+                    if inList[self.vert_num[u.get_id()]] == 0:
+                        connected_component_of_v[self.vert_num[u.get_id()]] = c;
+                        component.append(u.get_id())
+                        inList[self.vert_num[u.get_id()]] = 1
+                qq += 1
+        return connected_component_of_v
+
+
+    # This is finding k-truss for different values of k until there is not a connected component that contains all query vertices
+    def query_ktruss(self, query):
+        k = -1
+        must_increase_k = True
+        community = []
+        while must_increase_k:
+            k += 1
+            # Let's decompose the graph into k-truss
+            self.decompose_ktruss(k)
+            rcomponents = self.detect_connected_components_inversely()
+            t = rcomponents[self.vert_num[query[0]]]
+            for q in query:
+                if rcomponents[self.vert_num[q]] != t:
+                    must_increase_k = False
+            if must_increase_k:
+                community = []
+                for v in self:
+                    if rcomponents[self.vert_num[v.get_id()]] == t:
+                        community.append(v.get_id())
+
+        return community
 
 
 
@@ -308,4 +372,18 @@ g.add_edge('i', 'j', 9)
 #print ""
 #g.decompose_ktruss(2)
 #g.print_edges()
+
+# Test for connected components
+#g.print_graph()
+#g.decompose_ktruss(2)
+#g.print_graph()
+#components = g.detect_connected_components()
+#print components
+
+# Test for community search 
+#g.print_graph()
+#components = g.query_ktruss(['a', 'b'])
+#components = g.query_ktruss(['i', 'j'])
+#print components
+
 
