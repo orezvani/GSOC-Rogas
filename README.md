@@ -40,40 +40,58 @@ presented in several papers.
 We then provide a through comparison of different algorithms in terms
 of their performance on real social networks.
 
+## Related works
+Community detection in real-world social networks has been the focus of 
+many scholars in computer science, and several algorithms have been 
+developed for identifying communities from social networks. Studies in this 
+area have mainly considered the problem of identifying all non-overlapping 
+communities and overlapping communities from social networks. However, in 
+real-life applications, we are usually interested in identifying communities 
+around a given set of members of social networks. To this end, the community 
+search problem has been defined [1] and several algorithms for solving this 
+problem have been proposed. In this section, we review some of the 
+state-of-the-art techniques that are proposed for identifying communities, 
+in which a given set of query vertices participate.
+<br><br>
+Cui et al. [1] introduced a technique for identifying the 
+degree-based dense communities in which a single query vertex participates, and 
+studied two definitions for single vertex community search problem: Community 
+Search with Maximality constraint (CSM) and Community Search with Threshold 
+constraint (CST). In CSM, the objective is to find a connected subgraph that 
+contains the given query vertex and has the largest minimum degree, while in CST, 
+the objective is to find a connected subgraph that contains the query vertex and 
+its minimum degree is no less than a given threshold. Barbieri et 
+al. [2] proposed an extended model of CSM, which is 
+capable of handling queries with more than one vertex, based on minimum degree. 
+We implement this algorithm and provide it for Rogas.
+<br><br>
+The authors in [3] define the community of a vertex v, as a subgraph that is
+a k-truss with maximum possible value of k. Since k-truss provides strong
+connectivity and there is an efficient algorithm for finding k-trusses of a
+network for a given k, this method achieves good results. We implement this
+approach in Rogas.
+<br><br>
+The authors in [4] define the community of a vertex as a &gamma;-quasi k-clique
+that has k vertices and every vertex is connected to &gamma; percent of other
+vertices in the community. We also implement this approach in Rogas and present
+the implementation publicly.
+<br><br>
+In [5], Wu et al. studied the free rider effect in community 
+detection as the problem of communities being merged during the process of 
+community detection algorithms, due to use of inappropriate fitness metrics. 
+In this project, we make sure to avoid such effect in the chosen methods.
 
 
+## References
+[1] W. Cui, Y. Xiao, H. Wang, and W. Wang. Local search of communities in large graphs. In Proc. of SIGMOD'14, pages 991–1002. ACM, 2014.
 <br>
-Before runing the prototype, ensure the system is Ubuntu and all the external 
-python packages mentioned above are installed correctly. 
+[2] N. Barbieri, F. Bonchi, E. Galimberti, and F. Gullo. Efficient and effective community search. Data Mining and Knowledge Discovery, 29(5):1406–1433, 2015.
 <br>
+[3] X. Huang, H. Cheng, L. Qin, W. Tian, and J. X. Yu. Querying k-truss community in large and dynamic graphs. In Proc. of SIGMOD'14, pages 1311–1322. ACM, 2014.
 <br>
-**Notice that pillow is 
-the latest package for PIL and it is not compatible with the old PIL package. 
-If your have already had PIL in your python dist-packages (/usr/lib/python2.7/dist-packages/),
-please delete the original PIL and install the new Pillow package. If you are using Eclipse or 
-other IDE, I suggest to use the source code to install Pillow so that the unresolved import 
-issues of the IDE can be solved.**
+[4] J. Shan, D. Shen, T. Nie, Y. Kou, and G. Yu. Searching overlapping communities for group query. World Wide Web, pages 1–24, 2015.
 <br>
-<br>
-You also need to change the code of the *queryConsole.start()* method a bit 
-to connect your own PostgreSQL database. Then you can start the prototype 
-by running the *GUI_Console* program.
-<br>
-<br>
-More details about the Rogas, please refer to 
-the thesis "Towards a Unified Framework for Network Analytics" collected in 
-Australian National University (http://users.cecs.anu.edu.au/~u5170295/publications/thesis-minjian.pdf). You can also 
-contact *minjian.liu@anu.edu.au* or *qing.wang@anu.edu.au* for more information.
-<br>
-<br>
-PS: For answering how to change the output of the GUI_Console as left alignment (default is center alignment)
-You can change the source code of the pylsytable as follow:(the path in Ubuntu normally is 
-'/usr/local/lib/python2.7/dist-packages/pylsy/pylsy.py).
-<br>
-* Find the "def _pad_string(self, str, colwidth):" function in the pylsy.py
-* change " return ' ' * prefix + str +' ' * suffix " (center alignment ) as " return str + ' ' * prefix +' ' * suffix " (left alignment)
+[5] Y. Wu, R. Jin, J. Li, and X. Zhang. Robust local community detection: on free rider effect and its elimination. Proc. of VLDB'15, 8(7):798–809, 2015.
 
-## Contributors
-Instructor: Qing Wang (*qing.wang@anu.edu.au*) <br>
-Principal Developer: Minjian Liu (*minjian.liu@anu.edu.au*) <br>
-Developers: Yan Xiao (*xiaoyanict@foxmail.com*), Chong Feng (*u4943054@anu.edu.au*)
+
+
