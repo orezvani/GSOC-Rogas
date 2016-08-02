@@ -1,6 +1,6 @@
 #![Logo](https://cecs.anu.edu.au/sites/default/files/styles/anu_doublenarrow_440_scale/public/images/rogas-web.jpg?itok=JfEfhc1_)
 #Local Community Detection using Rogas
-Rogas is a project for Network Analytics
+Mojtaba (Omid) Rezvani
 
 ## Introduction
 Rogas provides a high-level declarative query language to 
@@ -13,30 +13,25 @@ integrates graphs with relations so that we have these two types of data
 structures respectively for network analysis and relational analysis; 
 (2) a SQL-like query language, which extends standard SQL with 
 graph constructing, ranking, clustering, and path finding operations; 
-(3) a query engine, which is built upon PostgreSQL and can efficiently process 
-network analysis queries using various graph systems and 
+(3) a query engine, which is built upon PostgreSQL and can efficiently 
+process network analysis queries using various graph systems and 
 their supporting algorithms.
 <br>
 <br>
-Here is the prototype implementation of the Rogas. The prototype
-is developed in **Python 2.7** with the official PostgreSQL client library – libpq. 
-We use **Psycopg**, the current mature wrapper for the libpq, as the 
-PostgreSQL adapter. For the GUI, we use **TkInter**, **PIL**, and **pylsytable**
-for window development, image formating and table-like printing. In terms of 
-graph algorithms, currently, we take advantage of **Graph-tool**, **SNAP** and 
-**NetworkX** for algorithms support.
-<br>
-<br>
-Here are the links for the python packages mentioned above:
-<br>
-(suggest to use Ubuntu or other Linux systems, Mac and Windows are hard to install all these packages)
-* Psycopg: http://initd.org/psycopg/
-* TkInter: https://wiki.python.org/moin/TkInter
-* Pillow for PIL: https://python-pillow.github.io/  (Require Pillow 3.1 or above)
-* pylsytable: https://github.com/Leviathan1995/Pylsy?files=1
-* Graph-tool: http://graph-tool.skewed.de/
-* SNAP: http://snap.stanford.edu/snappy/index.html
-* NetworkX: http://networkx.github.io/  
+In this Google summer of code project, we add the community search, also 
+known as local community detection capability to Rogas. We implement the 
+state-of-the-art algorithms proposed for local community detection for 
+Rogas.
+
+
+## Sumary of contributions in Google Summer of Code
+The work done in the google summer of code is 
+### Conducting intensive research on local community detection
+asdfsd
+### Implementation of several state-of-the-art algorithms for local
+community detection
+
+
 
 <br>
 Before runing the prototype, ensure the system is Ubuntu and all the external 
