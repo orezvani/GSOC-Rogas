@@ -25,11 +25,20 @@ Rogas.
 
 
 ## Sumary of contributions in Google Summer of Code
-The work done in the google summer of code is 
-### Conducting intensive research on local community detection
-asdfsd
-### Implementation of several state-of-the-art algorithms for local
-community detection
+The work done in the google summer of code includes: 
+### (1) Conducting intensive research on local community detection
+In this section, we study several approaches to local community
+detection problem and chose the top algorithms that outperform others
+in terms of efficiency, scalability and accuracy of finding communities.
+### (2) Implementation of several state-of-the-art algorithms for local
+In this section, we choose four algorithms presented for local community
+detectiona nd implement these algorithms in Python for the project. In
+particular, we implement local community search using several definitions
+including k-core, k-truss, k-edge-connected, &gamma;-quasi k-cliques as
+presented in several papers.
+### (3) Comparison of performance of different algorithms
+We then provide a through comparison of different algorithms in terms
+of their performance on real social networks.
 
 
 
