@@ -45,7 +45,6 @@ class Graph:
     def __init__(self):
         self.vert_dict = {}
         self.vert_num = {}
-        self.vert_id = []
         self.num_vertices = 0
 
 
@@ -68,7 +67,6 @@ class Graph:
         new_vertex = Vertex(node)
         self.vert_dict[node] = new_vertex
         self.vert_num[node] = self.num_vertices - 1
-        self.vert_id.append(node)
         return new_vertex
 
 
@@ -133,6 +131,14 @@ class Graph:
         else:
             return -1
 
+
+    def increment_weight(self, node1, node2, inc_by = 1):
+        if self.is_connected(node1, node2):
+            self.vert_dict[node1].adjacent[self.vert_dict[node2]] += inc_by
+            return self.vert_dict[node1].adjacent.get(self.vert_dict[node2])
+        else:
+            self.add_edge(node1, node2, inc_by)
+            return inc_by
 
 
     def get_vertices(self):
@@ -233,8 +239,24 @@ class Graph:
         return connected_component_of_v
 
 
-    def contract_edge(self, u, v):
-        # do contract this edge
+    def contract_edge(self, node1, node2):
+        u = node1.get_id()
+        v = node2.get_id()
+        # contract the edge (node1, node2) and merge it
+        ## first pick the vertex with less # neighbors (w.l.g. u)
+        if node1.get_num_neighbors() > node2.get_num_neighbors():
+            u, v = v, u
+        #print u, v 
+        ## then move all neighbors of u to v
+        ## consider weight updates, and edges in opposite direction
+        self.remove_edge(v, u)
+        self.remove_edge(u, v)
+        for w in self.vert_dict[u].get_connections():
+            self.increment_weight(v, w.get_id(), self.get_weight(u, w.get_id()))
+            self.increment_weight(w.get_id(), v, self.get_weight(u, w.get_id()))
+            self.remove_edge(u, w.get_id())
+            self.remove_edge(w.get_id(), u)
+        del self.vert_dict[u]
 
 
     # Finds k-edge-connected components of the graph using random contraction
@@ -243,12 +265,17 @@ class Graph:
         self.decompose_kcore(k)
         while (len(self.vert_dict) > 1): # 1 will be replaced with a condition on the number of edges
             # randomly pick an edge
+            self.print_edges()
             u = random.randrange(0, len(self.vert_dict))
-            u = self.vert_id[u]
+            u = self.vert_dict.keys()[u]
             v = random.randrange(0, self.vert_dict[u].get_num_neighbors())
             v = self.vert_dict[u].get_neighbor(v).get_id()
-            self.contract(u,v)
-            self.print_graph()
+            if u == v:
+                self.remove_edge(self.vert_dict[u], self.vert_dict[v])
+                print "An exception happened here; We found a self loop"
+                continue
+            self.contract_edge(self.vert_dict[u], self.vert_dict[v])
+            self.print_edges()
             break
             # if the degree of resulting vertex is less than k cut it
 
@@ -316,7 +343,7 @@ g.add_edge('h', 'j', 9)
 g.add_edge('i', 'j', 9)
 
 # Test for detecting kecc
-g.print_edges()
+#g.print_edges()
 g.decompose_kecc(2)
 #
 #g.print_graph()
