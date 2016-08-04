@@ -9,7 +9,12 @@
 import sys
 from os.path import isfile, join
 
+
+#########################################################################
+#   Simple list of lists considred for the adjacency list in this code  #
+#########################################################################
 class Graph:
+
     #########################################################################
     #   Initializes the graph                                               #
     #########################################################################
@@ -113,6 +118,7 @@ class Graph:
                 qq += 1
         return components
 
+
     ############################################################################################################
     # Finds connected components of the graph and returns the list of ID of connected component of each vertex #
     ############################################################################################################
@@ -139,6 +145,7 @@ class Graph:
                 qq += 1
         return connected_component_of_v
                 
+
     #######################################################################################################################
     # Queries a set of vertices among kcores and finds the largest k for which a kcore includes all vertices in the query #
     #######################################################################################################################
