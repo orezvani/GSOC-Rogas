@@ -15,30 +15,77 @@ class Vertex:
     def __init__(self, node):
         self.id = node
         self.adjacent = {}
+        self.contracted = []
+
 
     def __str__(self):
         return str(self.id) + ' adjacent: ' + str([x.id for x in self.adjacent])
 
+
     def add_neighbor(self, neighbor, weight=1):
         self.adjacent[neighbor] = weight
+
+
+    def has_neighbor(self, neighbor):
+        return self.adjacent.has_key(neighbor)
+
 
     def remove_neighbor(self, neighbor):
         del self.adjacent[neighbor]
 
+
     def get_connections(self):
         return self.adjacent.keys()  
+
 
     def get_neighbor(self, i):
         return self.adjacent.keys()[i]
 
+
     def get_num_neighbors(self):
         return len(self.adjacent)
+
 
     def get_id(self):
         return self.id
 
+
     def get_weight(self, neighbor):
         return self.adjacent[neighbor]
+
+
+    # be careful, this is dangrouse. We check whether the connection exists in the graph class
+    def update_weight(self, neighbor, new_weight):
+        if self.has_neighbor(neighbor):
+            self.adjacent[neighbor] = new_weight
+        else:
+            print "Shout: The edge does not exit"
+
+
+    # if the edge does not exist, it means that its weight is zero
+    def increment_weight(self, neighbor, inc_value):
+        if self.has_neighbor(neighbor):
+            self.adjacent[neighbor] += inc_value
+        else:
+            self.adjacent[neighbor] = inc_value
+
+
+    # getting the sum of weights the hard way -- used for testing
+    def get_sum_weights(self):
+        return sum(self.adjacent.values())
+
+
+    def add_contracted(self, neighbor):
+        if neighbor.contracted == []:
+            self.contracted.append(neighbor.get_id())
+        else:
+            self.contracted += neighbor.contracted
+
+
+    def get_contracted(self):
+        return self.contracted
+
+
 
 
 class Graph:
@@ -112,33 +159,35 @@ class Graph:
 
     def is_connected(self, node1, node2):
         if node1 in self.vert_dict and node2 in self.vert_dict:
-            return self.vert_dict[node1].adjacent.has_key(self.vert_dict[node2])
+            return self.vert_dict[node1].has_neighbor(self.vert_dict[node2])
         else:
             return False
 
 
     def get_weight(self, node1, node2):
         if node1 in self.vert_dict and node2 in self.vert_dict:
-            return self.vert_dict[node1].adjacent.get(self.vert_dict[node2])
+            return self.vert_dict[node1].get_weight(self.vert_dict[node2])
         else:
             return -1
 
 
     def update_weight(self, node1, node2, new_weight):
         if self.is_connected(node1, node2):
-            self.vert_dict[node1].adjacent[self.vert_dict[node2]] = new_weight
-            return self.vert_dict[node1].adjacent.get(self.vert_dict[node2])
+            #self.vert_dict[node1].adjacent[self.vert_dict[node2]] = new_weight
+            self.vert_dict[node1].update_weight(self.vert_dict[node2], new_weight)
+            return self.vert_dict[node1].get_weight(self.vert_dict[node2])
         else:
             return -1
 
 
     def increment_weight(self, node1, node2, inc_by = 1):
-        if self.is_connected(node1, node2):
-            self.vert_dict[node1].adjacent[self.vert_dict[node2]] += inc_by
-            return self.vert_dict[node1].adjacent.get(self.vert_dict[node2])
-        else:
-            self.add_edge(node1, node2, inc_by)
-            return inc_by
+        self.vert_dict[node1].increment_weight(self.vert_dict[node2], inc_by)
+        #if self.is_connected(node1, node2):
+        #    self.vert_dict[node1].adjacent[self.vert_dict[node2]] += inc_by
+        #    return self.vert_dict[node1].adjacent.get(self.vert_dict[node2])
+        #else:
+        #    self.add_edge(node1, node2, inc_by)
+        #    return inc_by
 
 
     def get_vertices(self):
@@ -246,11 +295,12 @@ class Graph:
         ## first pick the vertex with less # neighbors (w.l.g. u)
         if node1.get_num_neighbors() > node2.get_num_neighbors():
             u, v = v, u
-        #print u, v 
+        # print u, v 
         ## then move all neighbors of u to v
         ## consider weight updates, and edges in opposite direction
         self.remove_edge(v, u)
         self.remove_edge(u, v)
+        self.vert_dict[v].add_contracted(self.vert_dict[v])
         for w in self.vert_dict[u].get_connections():
             self.increment_weight(v, w.get_id(), self.get_weight(u, w.get_id()))
             self.increment_weight(w.get_id(), v, self.get_weight(u, w.get_id()))
@@ -265,17 +315,20 @@ class Graph:
         self.decompose_kcore(k)
         while (len(self.vert_dict) > 1): # 1 will be replaced with a condition on the number of edges
             # randomly pick an edge
-            self.print_edges()
+            #self.print_edges()
             u = random.randrange(0, len(self.vert_dict))
             u = self.vert_dict.keys()[u]
             v = random.randrange(0, self.vert_dict[u].get_num_neighbors())
             v = self.vert_dict[u].get_neighbor(v).get_id()
+            # contract the randomly selected edge
             if u == v:
                 self.remove_edge(self.vert_dict[u], self.vert_dict[v])
                 print "An exception happened here; We found a self loop"
                 continue
             self.contract_edge(self.vert_dict[u], self.vert_dict[v])
-            self.print_edges()
+            #print u, v
+            #self.print_edges()
+            # remove the updated vertex if its degree is less than k
             break
             # if the degree of resulting vertex is less than k cut it
 
