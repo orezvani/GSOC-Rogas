@@ -15,7 +15,9 @@ class Vertex:
     def __init__(self, node):
         self.id = node
         self.adjacent = {}
-        self.contracted = []
+        self.contracted = [node]
+        self.num_neighbors = 0
+        self.sum_weights = 0
 
 
     def __str__(self):
@@ -23,6 +25,9 @@ class Vertex:
 
 
     def add_neighbor(self, neighbor, weight=1):
+        if not self.adjacent.has_key(neighbor):
+            self.num_neighbors += 1
+            self.sum_weights += weight
         self.adjacent[neighbor] = weight
 
 
@@ -31,7 +36,10 @@ class Vertex:
 
 
     def remove_neighbor(self, neighbor):
-        del self.adjacent[neighbor]
+        if self.adjacent.has_key(neighbor):
+            self.num_neighbors -= 1
+            self.sum_weights -= self.adjacent[neighbor]
+            del self.adjacent[neighbor]
 
 
     def get_connections(self):
@@ -42,8 +50,16 @@ class Vertex:
         return self.adjacent.keys()[i]
 
 
-    def get_num_neighbors(self):
+    # getting the num of neighbors the hard way -- used for testing
+    def get_num_neighbors_h(self):
         return len(self.adjacent)
+
+
+    def get_num_neighbors(self):
+        # Testing script; It will be commented out
+        if self.num_neighbors != self.get_num_neighbors_h():
+            print "Error in updating num neighbors"
+        return self.num_neighbors
 
 
     def get_id(self):
@@ -57,6 +73,7 @@ class Vertex:
     # be careful, this is dangrouse. We check whether the connection exists in the graph class
     def update_weight(self, neighbor, new_weight):
         if self.has_neighbor(neighbor):
+            self.sum_weights -= self.adjacent[neighbor]
             self.adjacent[neighbor] = new_weight
         else:
             print "Shout: The edge does not exit"
@@ -68,18 +85,24 @@ class Vertex:
             self.adjacent[neighbor] += inc_value
         else:
             self.adjacent[neighbor] = inc_value
+            self.num_neighbors += 1
+        self.sum_weights += inc_value
 
 
     # getting the sum of weights the hard way -- used for testing
-    def get_sum_weights(self):
+    def get_sum_weights_h(self):
         return sum(self.adjacent.values())
 
 
+    def get_sum_weights(self):
+        # Testing script; It will be commented out
+        if self.sum_weights != self.get_sum_weights_h():
+            print "Error in updating num neighbors"
+        return self.sum_weights
+
+
     def add_contracted(self, neighbor):
-        if neighbor.contracted == []:
-            self.contracted.append(neighbor.get_id())
-        else:
-            self.contracted += neighbor.contracted
+        self.contracted += neighbor.get_contracted()
 
 
     def get_contracted(self):
@@ -197,50 +220,45 @@ class Graph:
     def decompose_kcore(self, k):
         # Let's decompose the graph into k-cores
 
-        # Find some edges to be removed
+        # Find some vertices to be removed
         to_be_removed = []
         for v in self:
-            for w in v.get_connections():
-                if self.get_weight(v.get_id(), w.get_id()) < k and self.vert_num[v.get_id()] < self.vert_num[w.get_id()]:
-                    to_be_removed.append((v.get_id(), w.get_id()))
+            if v.get_sum_weights() < k:
+                to_be_removed.append(v.get_id())
 
         # Iteratively removed edges with support no less than k
-        marked = [0] * self.num_vertices
-        to_be_decreased = []
         while len(to_be_removed) > 0:
-            a, b = to_be_removed.pop()
-            self.update_weight(a, b, -1)
-            self.update_weight(b, a, -1)
-            # mark neighbours of vertex a
-            for w in self.vert_dict[a].get_connections():
-                if self.get_weight(a, w.get_id()) != -1:
-                    marked[self.vert_num[w.get_id()]] = 1
-            # get common neighbours of a and b
-            for w in self.vert_dict[b].get_connections():
-                if marked[self.vert_num[w.get_id()]] > 0 and self.get_weight(b, w.get_id()) != -1:
-                    to_be_decreased.append(w.get_id())
-            # decrease the support of triangles that were formed by (a,b) using common neighbours of a and b
-            for w in to_be_decreased:
-                self.update_weight(a, w, self.get_weight(a, w)-1)
-                self.update_weight(w, a, self.get_weight(w, a)-1)
-                if self.get_weight(a, w) < k and self.get_weight(a, w) > -1:
-                    to_be_removed.append((min(a, w), max(a, w)))
-                self.update_weight(w, b, self.get_weight(w, b)-1)
-                self.update_weight(b, w, self.get_weight(b, w)-1)
-                if self.get_weight(b, w) < k and self.get_weight(b, w) > -1:
-                    to_be_removed.append((min(b, w), max(b, w)))
-            # unmark all neighbours of a for consistency
-            for w in self.vert_dict[a].get_connections():
-                marked[self.vert_num[w.get_id()]] = 0
-            to_be_decreased = []
+            u = to_be_removed.pop()
+            # mark neighbours of vertex u
+            for w in self.vert_dict[u].get_connections():
+                self.remove_edge(u, w.get_id())
+                self.remove_edge(w.get_id(), u)
+                if (w.get_sum_weights() < k):
+                    to_be_removed.append(w.get_id())
+            del self.vert_dict[u]
+            # Do we want to output u as a community?
+            #print u
 
-        
-        # Remove redundant edges
-        for v in self:
-            for w in v.get_connections():
-                if self.get_weight(v.get_id(), w.get_id()) == -1:
-                    self.remove_edge(v.get_id(), w.get_id())
- 
+
+    def decompose_kcore_by_vertex(self, k, v):
+        # Let's decompose the graph into k-cores
+
+        # Find some vertices to be removed
+        to_be_removed = [v]
+
+        # Iteratively removed edges with support no less than k
+        while len(to_be_removed) > 0:
+            u = to_be_removed.pop()
+            # mark neighbours of vertex u
+            for w in self.vert_dict[u].get_connections():
+                self.remove_edge(u, w.get_id())
+                self.remove_edge(w.get_id(), u)
+                if (w.get_sum_weights() < k):
+                    to_be_removed.append(w.get_id())
+            del self.vert_dict[u]
+            # Do we want to output u as a community?
+            #print u
+
 
     def detect_connected_components(self):
         # Find the connected components of the graph
@@ -300,18 +318,20 @@ class Graph:
         ## consider weight updates, and edges in opposite direction
         self.remove_edge(v, u)
         self.remove_edge(u, v)
-        self.vert_dict[v].add_contracted(self.vert_dict[v])
+        self.vert_dict[v].add_contracted(self.vert_dict[u])
         for w in self.vert_dict[u].get_connections():
             self.increment_weight(v, w.get_id(), self.get_weight(u, w.get_id()))
             self.increment_weight(w.get_id(), v, self.get_weight(u, w.get_id()))
             self.remove_edge(u, w.get_id())
             self.remove_edge(w.get_id(), u)
         del self.vert_dict[u]
+        return v
 
 
     # Finds k-edge-connected components of the graph using random contraction
     def decompose_kecc(self, k):
         # First decompose the graph into kcores
+        #self.print_graph()
         self.decompose_kcore(k)
         while (len(self.vert_dict) > 1): # 1 will be replaced with a condition on the number of edges
             # randomly pick an edge
@@ -321,16 +341,23 @@ class Graph:
             v = random.randrange(0, self.vert_dict[u].get_num_neighbors())
             v = self.vert_dict[u].get_neighbor(v).get_id()
             # contract the randomly selected edge
+            #print u, v
             if u == v:
                 self.remove_edge(self.vert_dict[u], self.vert_dict[v])
                 print "An exception happened here; We found a self loop"
                 continue
-            self.contract_edge(self.vert_dict[u], self.vert_dict[v])
-            #print u, v
+            # v is the remaining vertex after contraction
+            v = self.contract_edge(self.vert_dict[u], self.vert_dict[v])
+            if self.vert_dict[v].get_sum_weights() < k:
+                print self.vert_dict[v].get_contracted()
+                self.decompose_kcore_by_vertex(k, v)
             #self.print_edges()
             # remove the updated vertex if its degree is less than k
-            break
+            #break
             # if the degree of resulting vertex is less than k cut it
+        #print "Resulted int he graph"
+        #self.print_graph()
+        #print self.vert_dict.values()[0].get_contracted()
 
 
     # This is finding kECC for different values of k until there is not a connected component that contains all query vertices
@@ -397,7 +424,7 @@ g.add_edge('i', 'j', 9)
 
 # Test for detecting kecc
 #g.print_edges()
-g.decompose_kecc(2)
+g.decompose_kecc(20)
 #
 #g.print_graph()
 #g.print_edges()
