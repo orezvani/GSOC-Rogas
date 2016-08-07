@@ -10,6 +10,7 @@
 import sys
 import random
 from os.path import isfile, join
+import copy
 
 class Vertex:
     def __init__(self, node):
@@ -217,49 +218,6 @@ class Graph:
         return self.vert_dict.keys()
 
 
-    def decompose_kcore(self, k):
-        # Let's decompose the graph into k-cores
-
-        # Find some vertices to be removed
-        to_be_removed = []
-        for v in self:
-            if v.get_sum_weights() < k:
-                to_be_removed.append(v.get_id())
-
-        # Iteratively removed edges with support no less than k
-        while len(to_be_removed) > 0:
-            u = to_be_removed.pop()
-            # mark neighbours of vertex u
-            for w in self.vert_dict[u].get_connections():
-                self.remove_edge(u, w.get_id())
-                self.remove_edge(w.get_id(), u)
-                if (w.get_sum_weights() < k):
-                    to_be_removed.append(w.get_id())
-            del self.vert_dict[u]
-            # Do we want to output u as a community?
-            #print u
-
-
-    def decompose_kcore_by_vertex(self, k, v):
-        # Let's decompose the graph into k-cores
-
-        # Find some vertices to be removed
-        to_be_removed = [v]
-
-        # Iteratively removed edges with support no less than k
-        while len(to_be_removed) > 0:
-            u = to_be_removed.pop()
-            # mark neighbours of vertex u
-            for w in self.vert_dict[u].get_connections():
-                self.remove_edge(u, w.get_id())
-                self.remove_edge(w.get_id(), u)
-                if (w.get_sum_weights() < k):
-                    to_be_removed.append(w.get_id())
-            del self.vert_dict[u]
-            # Do we want to output u as a community?
-            #print u
-
-
     def detect_connected_components(self):
         # Find the connected components of the graph
         inList = [0] * self.num_vertices
@@ -306,6 +264,53 @@ class Graph:
         return connected_component_of_v
 
 
+    def decompose_kcore(self, k):
+        # Let's decompose the graph into k-cores
+
+        # Find some vertices to be removed
+        to_be_removed = []
+        for v in self:
+            if v.get_sum_weights() < k:
+                to_be_removed.append(v.get_id())
+
+        # Iteratively removed edges with support no less than k
+        while len(to_be_removed) > 0:
+            u = to_be_removed.pop()
+            if not self.vert_dict.has_key(u):
+                continue
+            # mark neighbours of vertex u
+            for w in self.vert_dict[u].get_connections():
+                self.remove_edge(u, w.get_id())
+                self.remove_edge(w.get_id(), u)
+                if (w.get_sum_weights() < k):
+                    to_be_removed.append(w.get_id())
+            del self.vert_dict[u]
+            # Do we want to output u as a community?
+            #print u
+
+
+    def decompose_kcore_by_vertex(self, k, v):
+        # Let's decompose the graph into k-cores
+
+        # Find some vertices to be removed
+        to_be_removed = [v]
+
+        # Iteratively removed edges with support no less than k
+        while len(to_be_removed) > 0:
+            u = to_be_removed.pop()
+            if not self.vert_dict.has_key(u):
+                continue
+            # mark neighbours of vertex u
+            for w in self.vert_dict[u].get_connections():
+                self.remove_edge(u, w.get_id())
+                self.remove_edge(w.get_id(), u)
+                if w.get_sum_weights() < k:
+                    to_be_removed.append(w.get_id())
+            del self.vert_dict[u]
+            # Do we want to output u as a community?
+            #print u
+
+
     def contract_edge(self, node1, node2):
         u = node1.get_id()
         v = node2.get_id()
@@ -332,7 +337,10 @@ class Graph:
     def decompose_kecc(self, k):
         # First decompose the graph into kcores
         #self.print_graph()
+        communities = []
         self.decompose_kcore(k)
+        #uv = [('h','g'), ('a','c'), ('j','i'), ('b','c'), ('c','d'), ('i','g')]
+        #kk = -1
         while (len(self.vert_dict) > 1): # 1 will be replaced with a condition on the number of edges
             # randomly pick an edge
             #self.print_edges()
@@ -340,6 +348,9 @@ class Graph:
             u = self.vert_dict.keys()[u]
             v = random.randrange(0, self.vert_dict[u].get_num_neighbors())
             v = self.vert_dict[u].get_neighbor(v).get_id()
+            #kk += 1
+            #u = uv[kk][0]
+            #v = uv[kk][1]
             # contract the randomly selected edge
             #print u, v
             if u == v:
@@ -349,8 +360,11 @@ class Graph:
             # v is the remaining vertex after contraction
             v = self.contract_edge(self.vert_dict[u], self.vert_dict[v])
             if self.vert_dict[v].get_sum_weights() < k:
-                print self.vert_dict[v].get_contracted()
+                #print self.vert_dict[v].get_contracted()
+                communities.append(self.vert_dict[v].get_contracted())
                 self.decompose_kcore_by_vertex(k, v)
+            #self.print_graph()
+            #print "--------"
             #self.print_edges()
             # remove the updated vertex if its degree is less than k
             #break
@@ -358,27 +372,33 @@ class Graph:
         #print "Resulted int he graph"
         #self.print_graph()
         #print self.vert_dict.values()[0].get_contracted()
+        return communities
 
 
     # This is finding kECC for different values of k until there is not a connected component that contains all query vertices
     def query_kecc(self, query):
-        k = -1
+        k = 0
         must_increase_k = True
         community = []
+        vert_dict_copy = copy.deepcopy(self.vert_dict)
         while must_increase_k:
             k += 1
-            # Let's decompose the graph into k-truss
-            self.decompose_ktruss(k)
-            rcomponents = self.detect_connected_components_inversely()
-            t = rcomponents[self.vert_num[query[0]]]
+            # Let's decompose the graph into kECC
+            communities = self.decompose_kecc(k)
+            rcomponents = {}
+            for i in range(0, len(communities)):
+                for vertex in communities[i]:
+                    rcomponents[vertex] = i
+            if rcomponents.has_key(query[0]):
+                t = rcomponents[query[0]]
             for q in query:
-                if rcomponents[self.vert_num[q]] != t:
+                if not rcomponents.has_key(q):
+                    must_increase_k = False
+                elif rcomponents[q] != t:
                     must_increase_k = False
             if must_increase_k:
-                community = []
-                for v in self:
-                    if rcomponents[self.vert_num[v.get_id()]] == t:
-                        community.append(v.get_id())
+                community = communities[rcomponents[query[0]]]
+            self.vert_dict = copy.deepcopy(vert_dict_copy)
 
         return community
 
@@ -424,7 +444,7 @@ g.add_edge('i', 'j', 9)
 
 # Test for detecting kecc
 #g.print_edges()
-g.decompose_kecc(20)
+#g.decompose_kecc(20)
 #
 #g.print_graph()
 #g.print_edges()
@@ -446,15 +466,15 @@ g.decompose_kecc(20)
 
 # Test for connected components
 #g.print_graph()
-#g.decompose_ktruss(2)
+#g.decompose_kecc(2)
 #g.print_graph()
 #components = g.detect_connected_components()
 #print components
 
 # Test for community search 
 #g.print_graph()
-#components = g.query_ktruss(['a', 'b'])
-#components = g.query_ktruss(['i', 'j'])
-#print components
+#components = g.query_kecc(['a', 'b'])
+##components = g.query_kecc(['i', 'j'])
+print components
 
 
