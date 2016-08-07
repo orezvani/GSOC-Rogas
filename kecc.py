@@ -475,6 +475,6 @@ g.add_edge('i', 'j', 9)
 #g.print_graph()
 #components = g.query_kecc(['a', 'b'])
 ##components = g.query_kecc(['i', 'j'])
-print components
+#print components
 
 
