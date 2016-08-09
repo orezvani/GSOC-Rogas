@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 
 #################################################
-#   This code finds k-edge-connected component  #
-#   of a given graph using random contraction.  #
-#   It also queries vertices in kECC            #
+#   This code finds communities of a given      #
+#   graph. According to papge: "Searching       #
+#   overlapping communities for group query"    #
+#   by Shan et al.                              #
 #   Author: Mojtaba (Omid) Rezvani              #
 #################################################
 
@@ -218,52 +219,6 @@ class Graph:
         return self.vert_dict.keys()
 
 
-    def detect_connected_components(self):
-        # Find the connected components of the graph
-        inList = [0] * self.num_vertices
-        components = [[]]
-        for v in self:
-            if inList[self.vert_num[v.get_id()]] == 1:
-                continue
-            components.append([])
-            components[len(components) - 1].append(v.get_id())
-            inList[self.vert_num[v.get_id()]] = 1
-            qq = 0
-            while qq < len(components[len(components) - 1]):
-                vv = components[len(components) - 1][qq]
-                for u in self.vert_dict[vv].get_connections():
-                    if inList[self.vert_num[u.get_id()]] == 0:
-                        components[len(components) - 1].append(u.get_id())
-                        inList[self.vert_num[u.get_id()]] = 1
-                qq += 1
-        return components
-
-
-    # Finds connected components of the graph and returns the list of ID of connected component of each vertex
-    def detect_connected_components_inversely(self):
-        # Find the connected components of the resulting graph
-        inList = [0] * self.num_vertices
-        connected_component_of_v = [-1] * self.num_vertices
-        c = -1
-        for v in self:
-            if inList[self.vert_num[v.get_id()]] == 1:
-                continue
-            c += 1
-            connected_component_of_v[self.vert_num[v.get_id()]] = c;
-            component = [v.get_id()]
-            inList[self.vert_num[v.get_id()]] = 1
-            qq = 0
-            while qq < len(component):
-                vv = component[qq]
-                for u in self.vert_dict[vv].get_connections():
-                    if inList[self.vert_num[u.get_id()]] == 0:
-                        connected_component_of_v[self.vert_num[u.get_id()]] = c;
-                        component.append(u.get_id())
-                        inList[self.vert_num[u.get_id()]] = 1
-                qq += 1
-        return connected_component_of_v
-
-
     def decompose_kcore(self, k):
         # Let's decompose the graph into k-cores
 
@@ -289,116 +244,12 @@ class Graph:
             #print u
 
 
-    def decompose_kcore_by_vertex(self, k, v):
-        # Let's decompose the graph into k-cores
-
-        # Find some vertices to be removed
-        to_be_removed = [v]
-
-        # Iteratively removed edges with support no less than k
-        while len(to_be_removed) > 0:
-            u = to_be_removed.pop()
-            if not self.vert_dict.has_key(u):
-                continue
-            # mark neighbours of vertex u
-            for w in self.vert_dict[u].get_connections():
-                self.remove_edge(u, w.get_id())
-                self.remove_edge(w.get_id(), u)
-                if w.get_sum_weights() < k:
-                    to_be_removed.append(w.get_id())
-            del self.vert_dict[u]
-            # Do we want to output u as a community?
-            #print u
-
-
-    def contract_edge(self, node1, node2):
-        u = node1.get_id()
-        v = node2.get_id()
-        # contract the edge (node1, node2) and merge it
-        ## first pick the vertex with less # neighbors (w.l.g. u)
-        if node1.get_num_neighbors() > node2.get_num_neighbors():
-            u, v = v, u
-        # print u, v 
-        ## then move all neighbors of u to v
-        ## consider weight updates, and edges in opposite direction
-        self.remove_edge(v, u)
-        self.remove_edge(u, v)
-        self.vert_dict[v].add_contracted(self.vert_dict[u])
-        for w in self.vert_dict[u].get_connections():
-            self.increment_weight(v, w.get_id(), self.get_weight(u, w.get_id()))
-            self.increment_weight(w.get_id(), v, self.get_weight(u, w.get_id()))
-            self.remove_edge(u, w.get_id())
-            self.remove_edge(w.get_id(), u)
-        del self.vert_dict[u]
-        return v
-
-
-    # Finds k-edge-connected components of the graph using random contraction
-    def decompose_kecc(self, k):
-        # First decompose the graph into kcores
-        #self.print_graph()
-        communities = []
-        self.decompose_kcore(k)
-        #uv = [('h','g'), ('a','c'), ('j','i'), ('b','c'), ('c','d'), ('i','g')]
-        #kk = -1
-        while (len(self.vert_dict) > 1): # 1 will be replaced with a condition on the number of edges
-            # randomly pick an edge
-            #self.print_edges()
-            u = random.randrange(0, len(self.vert_dict))
-            u = self.vert_dict.keys()[u]
-            v = random.randrange(0, self.vert_dict[u].get_num_neighbors())
-            v = self.vert_dict[u].get_neighbor(v).get_id()
-            #kk += 1
-            #u = uv[kk][0]
-            #v = uv[kk][1]
-            # contract the randomly selected edge
-            #print u, v
-            if u == v:
-                self.remove_edge(self.vert_dict[u], self.vert_dict[v])
-                print "An exception happened here; We found a self loop"
-                continue
-            # v is the remaining vertex after contraction
-            v = self.contract_edge(self.vert_dict[u], self.vert_dict[v])
-            if self.vert_dict[v].get_sum_weights() < k:
-                #print self.vert_dict[v].get_contracted()
-                communities.append(self.vert_dict[v].get_contracted())
-                self.decompose_kcore_by_vertex(k, v)
-            #self.print_graph()
-            #print "--------"
-            #self.print_edges()
-            # remove the updated vertex if its degree is less than k
-            #break
-            # if the degree of resulting vertex is less than k cut it
-        #print "Resulted int he graph"
-        #self.print_graph()
-        #print self.vert_dict.values()[0].get_contracted()
-        return communities
-
-
     # This is finding kECC for different values of k until there is not a connected component that contains all query vertices
-    def query_kecc(self, query):
-        k = 0
-        must_increase_k = True
+    def query_gamma_quasi_k_clique(self, gamma, k, query):
         community = []
-        vert_dict_copy = copy.deepcopy(self.vert_dict)
-        while must_increase_k:
-            k += 1
+        while len(query) > 0:
+            v0 = query.pop()
             # Let's decompose the graph into kECC
-            communities = self.decompose_kecc(k)
-            rcomponents = {}
-            for i in range(0, len(communities)):
-                for vertex in communities[i]:
-                    rcomponents[vertex] = i
-            if rcomponents.has_key(query[0]):
-                t = rcomponents[query[0]]
-            for q in query:
-                if not rcomponents.has_key(q):
-                    must_increase_k = False
-                elif rcomponents[q] != t:
-                    must_increase_k = False
-            if must_increase_k:
-                community = communities[rcomponents[query[0]]]
-            self.vert_dict = copy.deepcopy(vert_dict_copy)
 
         return community
 
@@ -409,45 +260,43 @@ class Graph:
 
 
 g = Graph()
+gamma = 0.9
+k = 10
 # Test for large networks
-g.read_graph("edges.txt")
-g.decompose_kecc(5)
+#g.read_graph("edges.txt")
+#g.decompose_kecc(5)
 
-#g.add_vertex('a')
-#g.add_vertex('b')
-#g.add_vertex('c')
-#g.add_vertex('d')
-#g.add_vertex('e')
-#g.add_vertex('f')
+g.add_vertex('a')
+g.add_vertex('b')
+g.add_vertex('c')
+g.add_vertex('d')
+g.add_vertex('e')
+g.add_vertex('f')
 
-#g.add_vertex('g')
-#g.add_vertex('h')
-#g.add_vertex('i')
-#g.add_vertex('j')
+g.add_vertex('g')
+g.add_vertex('h')
+g.add_vertex('i')
+g.add_vertex('j')
 
-#g.add_edge('a', 'b', 7)  
-#g.add_edge('a', 'c', 9)
-#g.add_edge('a', 'f', 14)
-#g.add_edge('b', 'c', 10)
-#g.add_edge('b', 'd', 15)
-#g.add_edge('c', 'd', 11)
-#g.add_edge('c', 'f', 2)
-#g.add_edge('d', 'e', 6)
-#g.add_edge('e', 'f', 9)
-#g.add_edge('e', 'g', 9)
-#g.add_edge('g', 'h', 9)
-#g.add_edge('g', 'i', 9)
-#g.add_edge('g', 'j', 9)
-#g.add_edge('h', 'i', 9)
-#g.add_edge('h', 'j', 9)
-#g.add_edge('i', 'j', 9)
+g.add_edge('a', 'b')  
+g.add_edge('a', 'c')
+g.add_edge('a', 'f')
+g.add_edge('b', 'c')
+g.add_edge('b', 'd')
+g.add_edge('c', 'd')
+g.add_edge('c', 'f')
+g.add_edge('d', 'e')
+g.add_edge('e', 'f')
+g.add_edge('e', 'g')
+g.add_edge('g', 'h')
+g.add_edge('g', 'i')
+g.add_edge('g', 'j')
+g.add_edge('h', 'i')
+g.add_edge('h', 'j')
+g.add_edge('i', 'j')
 
-# Test for detecting kecc
-#g.print_edges()
-#g.decompose_kecc(20)
-#
-#g.print_graph()
-#g.print_edges()
+# Test for detecting gamma-quasi-k-clique
+g.query_gamma_quasi_k_clique(gamma, k, 'a')
 
 # Test for removing edges
 #g.print_edges()
