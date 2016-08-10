@@ -249,6 +249,14 @@ class Graph:
         community = []
         while len(query) > 0:
             v0 = query.pop()
+            print v0
+            # While (1):
+            #   C = []
+            #   C = next_clique(v0)
+            #   if len(C) == 0:
+            #       break
+            #   expand(C)
+            #   community += C
             # Let's decompose the graph into kECC
 
         return community
@@ -296,7 +304,7 @@ g.add_edge('h', 'j')
 g.add_edge('i', 'j')
 
 # Test for detecting gamma-quasi-k-clique
-g.query_gamma_quasi_k_clique(gamma, k, 'a')
+g.query_gamma_quasi_k_clique(gamma, k, ['a', 'b'])
 
 # Test for removing edges
 #g.print_edges()
