@@ -244,20 +244,51 @@ class Graph:
             #print u
 
 
+
+    # Modified DFS used for finding cliques
+    def modified_dfs(self, gamma, k, v0, C, CC):
+        if len(C) == k:
+            # check if it is actually a gamma-quasi k-clique
+            CC.append(C)
+            return 
+
+        # Maximal number of edges that the result clique can have
+        gC = 0
+        if gC < gamma * k * (k-1) / 2:
+            return
+        for v in self.vert_dict[v0].get_connections():
+            if v.get_num_neighbors(v.get_id()) > xx:
+                modified_dfs(gamma, k, v.get_id(), C+[v], CC)
+
+
+    # Recursively find the quasi-cliques that include vertex v0
+    def next_clique(self, gamma, k, v0, C, CC):
+        C = [v0]
+        modified_dfs(gamma, k, v, C, CC)
+
+
+    # Expand the quasi clique of G[C]
+    def expand(self, gamma, k, C):
+        C = []
+
+
     # This is finding kECC for different values of k until there is not a connected component that contains all query vertices
     def query_gamma_quasi_k_clique(self, gamma, k, query):
         community = []
         while len(query) > 0:
             v0 = query.pop()
             print v0
-            # While (1):
-            #   C = []
-            #   C = next_clique(v0)
-            #   if len(C) == 0:
-            #       break
-            #   expand(C)
-            #   community += C
-            # Let's decompose the graph into kECC
+            while (1):
+                C = []
+                CC = []
+                self.next_clique(gamma, k, v0, C, CC)
+                if len(C) == 0:
+                    break
+                self.expand(gamma, k, C)
+                for u in C:
+                    if u in query:
+                        query.remove(u)
+                community += C
 
         return community
 
@@ -272,7 +303,7 @@ gamma = 0.9
 k = 10
 # Test for large networks
 #g.read_graph("edges.txt")
-#g.decompose_kecc(5)
+#g.query_gamma_quasi_k_clique(self, 10, 0.9, [0])
 
 g.add_vertex('a')
 g.add_vertex('b')
@@ -305,33 +336,4 @@ g.add_edge('i', 'j')
 
 # Test for detecting gamma-quasi-k-clique
 g.query_gamma_quasi_k_clique(gamma, k, ['a', 'b'])
-
-# Test for removing edges
-#g.print_edges()
-#g.print_graph()
-#print ""
-#g.remove_edge('a', 'b')
-#g.print_graph()
-#g.print_edges()
-
-
-# Test for ktruss with edge removals
-#g.print_edges()
-#print ""
-#g.decompose_ktruss(2)
-#g.print_edges()
-
-# Test for connected components
-#g.print_graph()
-#g.decompose_kecc(2)
-#g.print_graph()
-#components = g.detect_connected_components()
-#print components
-
-# Test for community search 
-#g.print_graph()
-#components = g.query_kecc(['a', 'b'])
-##components = g.query_kecc(['i', 'j'])
-#print components
-
 
