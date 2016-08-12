@@ -36,7 +36,13 @@ detectiona nd implement these algorithms in Python for the project. In
 particular, we implement local community search using several definitions
 including k-core, k-truss, k-edge-connected, &gamma;-quasi k-cliques as
 presented in several papers.
-### (3) Comparison of performance of different algorithms
+### (3) Design and implementation of a new approach
+We also present a new approach for local community detection in
+large-scale networks and devise an efficient algorithm for this problem.
+Specifically, we propose to use k-edge-connected components for local
+community detection problem and propose an algorithm using random
+contractions.
+### (4) Comparison of performance of different algorithms
 We then provide a through comparison of different algorithms in terms
 of their performance on real social networks.
 
@@ -81,6 +87,13 @@ detection as the problem of communities being merged during the process of
 community detection algorithms, due to use of inappropriate fitness metrics. 
 In this project, we make sure to avoid such effect in the chosen methods.
 
+## A new approach for local community detection
+Given a connectivity threshold k, we define a community as a maximal subgraph, 
+in which there is at least k edge-disjoint paths between every pair of vertices.
+We then use a randomized algorithm for the problem. In the randomized algorithm,
+we iteratively pick a random edge and contract that edge, until there is no edge
+left in the network. During random contractions, if the degree of a vertex
+becomes less than k, we remove that vertex from network.
 
 ## References
 [1] W. Cui, Y. Xiao, H. Wang, and W. Wang. Local search of communities in large graphs. In Proc. of SIGMOD'14, pages 991–1002. ACM, 2014.
