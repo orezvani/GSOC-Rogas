@@ -1,22 +1,26 @@
 #!/usr/bin/env python
 
-#################################################
-#   This code finds k-cores of a given graph    #
-#   It also queries vertices in k-cores         #
-#   Author: Mojtaba (Omid) Rezvani              #
-#################################################
+#########################################################################
+#   This code finds k-cores of a given graph                            #
+#   It also queries vertices in k-cores                                 #
+#   Author: Mojtaba (Omid) Rezvani                                      #
+#########################################################################
 
 import sys
 from os.path import isfile, join
 
 class Graph:
-    # Initializes the graph
+    #########################################################################
+    #   Initializes the graph                                               #
+    #########################################################################
     def __init__(self):
         # The graph is a simple data structure: a list of lists, adjacency list
         self.edges = []
 
 
-    # Reads the edge list of the graph into an adjacency matrix
+    #########################################################################
+    #   Reads the edge list of the graph into an adjacency matrix           #
+    #########################################################################
     def read_graph(self, graph_file):
         with open(graph_file) as gf:
             for line in gf:
@@ -29,7 +33,9 @@ class Graph:
         gf.close()
 
 
-    # Removes all edges that are not in the kcore of the graph
+    #########################################################################
+    #   Removes all edges that are not in the kcore of the graph            #
+    #########################################################################
     def make_kcore(self, k):
         ## kcore detection begins here
         # Let's store the degrees of vertices
@@ -53,8 +59,10 @@ class Graph:
             del self.edges[v][:]
 
 
-    # Detects the kcore of the graph and returns a bunch of kcore components (including single vertices)
-    ######## This needs to be changed to only detecting kcore, not removing edges
+    ######################################################################################################
+    # Detects the kcore of the graph and returns a bunch of kcore components (including single vertices) #
+    # This needs to be changed to only detecting kcore, not removing edges                               #
+    ######################################################################################################
     def detect_kcore(self, k):
         ## kcore detection begins here
         # Let's store the degrees of vertices
@@ -82,7 +90,9 @@ class Graph:
         return components
 
 
-    # Finds connected components of the graph and returns an list of lists (connected components)
+    ###############################################################################################
+    # Finds connected components of the graph and returns an list of lists (connected components) #
+    ###############################################################################################
     def detect_connected_components(self):
         # Find the connected components of the resulting graph
         inList = [0]*len(self.edges)
@@ -103,8 +113,9 @@ class Graph:
                 qq += 1
         return components
 
-
-    # Finds connected components of the graph and returns the list of ID of connected component of each vertex
+    ############################################################################################################
+    # Finds connected components of the graph and returns the list of ID of connected component of each vertex #
+    ############################################################################################################
     def detect_connected_components_inversely(self):
         # Find the connected components of the resulting graph
         inList = [0]*len(self.edges)
@@ -128,8 +139,9 @@ class Graph:
                 qq += 1
         return connected_component_of_v
                 
-
-    # Queries a set of vertices among kcores and finds the largest k for which a kcore includes all vertices in the query
+    #######################################################################################################################
+    # Queries a set of vertices among kcores and finds the largest k for which a kcore includes all vertices in the query #
+    #######################################################################################################################
     def query_kcores(query_vertices):
         k = 0
         # This is a flag, determining whether we can still increase the k in kcore or we should stop and output the kcore
