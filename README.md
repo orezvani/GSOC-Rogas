@@ -45,6 +45,10 @@ contractions.
 ### (4) Comparison of performance of different algorithms
 We then provide a through comparison of different algorithms in terms
 of their performance on real social networks.
+<br><br>
+Further details about my commits and contribitions is provided in my
+list of commits to this project: 
+https://github.com/orezvani/GSOC-Rogas/commits/local-community-search
 
 ## Related works
 Community detection in real-world social networks has been the focus of 
