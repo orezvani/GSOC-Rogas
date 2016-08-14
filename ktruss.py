@@ -3,7 +3,8 @@
 #########################################################################
 #   This code finds k-truss of a given graph. It also queries vertices  #
 #   in k-trusses. The main reference for this code is the paper by      #
-#   Bonci et al.                                                        #
+#   Bonci et al. The algorithm for finding k-truss is suggested by      #
+#   sigmod paper on truss decomposition of massive networks.            #
 #   Author: Mojtaba (Omid) Rezvani                                      #
 #########################################################################
 
